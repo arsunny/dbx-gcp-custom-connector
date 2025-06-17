@@ -29,22 +29,14 @@ def read_args():
                         help="Dataplex Entry Group ID to import metadata into")
     
     parser.add_argument("--jar", type=str, required=False, help="path to jar file")
-    
-    # Databricks specific arguments
-    # TODO: @sunnyar Add required arguments needed to export.
-    # parser.add_argument("--account", type=str, required=True,help="Snowflake account to connect to")
-    # parser.add_argument("--user", type=str, required=True, help="Snowflake User")
-    # parser.add_argument("--database", type=str, required=True, help="Snowflake database")
-    # parser.add_argument("--warehouse", type=str,required=False,help="Snowflake warehouse")
-    # parser.add_argument("--schema", type=str,required=False,help="Snowflake schema")
-    # parser.add_argument("--role", type=str,required=False,help="Snowflake Role")
 
-    # Authentication arguments
-    # TODO: @Shashank Add required argument needed for oauth2.0 authentication
-    # parser.add_argument("--authentication",type=str,required=False,choices=['oauth','password'],help="Authentication method")
-    # credentials_group = parser.add_mutually_exclusive_group()
-    # credentials_group.add_argument("--password_secret", type=str,help="Google Cloud Secret Manager ID for password")
-    # credentials_group.add_argument("--token", type=str, help="Authentication token for oauth")
+    # Databricks specific arguments
+    parser.add_argument("--workspace_url", type=str, required=True, help="Databricks workspace URL")
+    parser.add_argument("--cluster_id", type=str, required=True, help="Databricks Cluster ID")
+    parser.add_argument("--http_path", type=str, required=False, help="Databricks SQL HTTP path, if applicable")
+
+    # Databricks PAT token from Secret Manager
+    parser.add_argument("--token_secret", type=str, required=True, help="Secret Manager ID containing Databricks PAT")
 
     # Output destination arguments. Generate local only, or local + to Cloud Storage bucket
     output_option_group = parser.add_mutually_exclusive_group()
@@ -56,16 +48,20 @@ def read_args():
     
     parsed_args = parser.parse_known_args()[0]
 
-    # Apply common argument validation checks first
+    # Validate common arguments
     parsed_args = validateArguments(parsed_args)
 
-    # Snowflake specific authentication validation checks
-    # if parsed_args.authentication == 'oauth' and parsed_args.token is None:
-    #     print("--token must also be supplied if using --authentication oauth")
-    #     sys.exit(1)
-    #
-    # if (parsed_args.authentication is None or parsed_args.authentication == 'password') and parsed_args.password_secret is None:
-    #     print("--password_secret must also be supplied if using --authentication password")
-    #     sys.exit(1)
-    
+    # Load token from Secret Manager or local path using helper
+    parsed_args.token = loadReferencedFile(parsed_args.token_secret)
+
     return vars(parsed_args)
+
+# python main.py \
+#   --target_project_id=your-project \
+#   --target_location_id=us-central1 \
+#   --target_entry_group_id=databricks-group \
+#   --workspace_url=https://<your-workspace>.cloud.databricks.com \
+#   --cluster_id=abcd1234 \
+#   --http_path=/sql/1.0/warehouses/xyz \
+#   --token_secret=secret:databricks-pat \
+#   --local_output_only
