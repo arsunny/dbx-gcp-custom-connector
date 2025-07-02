@@ -38,12 +38,13 @@ def validateArguments(parsed_args):
 
         validateSecretID(parsed_args.password_secret)
 
-        parsed_args.password = get_password(parsed_args.password_secret)
+        # parsed_args.password = get_password(parsed_args.password_secret)
 
     return parsed_args
 
 
 def validateSecretID(secretpath: str) -> bool:
+    secretpath = secretpath.split(":")[1]
     pattern = r"^projects/[^/]+/secrets/[^/]+$"
 
     if not re.match(pattern, secretpath):

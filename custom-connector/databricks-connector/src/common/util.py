@@ -22,14 +22,17 @@ from google.cloud import secretmanager
 # Loads file at a given path and returns the content as a string if path start as secret treat is as a Secret Manager reference
 def loadReferencedFile(file_path_or_secret_id) -> str:
     # If path starts with 'secret:' prefix, treat it as a Secret Manager reference
+    print(file_path_or_secret_id)
     if file_path_or_secret_id.startswith("secret:"):
         secret_id = file_path_or_secret_id.replace("secret:", "")
+        print(secret_id)
         try:
             client = secretmanager.SecretManagerServiceClient()
-            project_id = os.environ.get("GOOGLE_CLOUD_PROJECT")
-            if not project_id:
-                raise Exception("GOOGLE_CLOUD_PROJECT environment variable is not set.")
-            name = f"projects/{project_id}/secrets/{secret_id}/versions/latest"
+            # project_id = os.environ.get("GOOGLE_CLOUD_PROJECT")
+            # print(project_id)
+            # if not project_id:
+            #     raise Exception("GOOGLE_CLOUD_PROJECT environment variable is not set.")
+            name = f"{secret_id}/versions/latest"
             response = client.access_secret_version(request={"name": name})
             return response.payload.data.decode("UTF-8")
         except Exception as e:

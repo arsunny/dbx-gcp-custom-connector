@@ -17,6 +17,7 @@ from typing import Dict
 import os
 import importlib
 import sys
+from pyspark.sql.functions import col
 # import google.cloud.logging as gcp_logging
 # import logging
 from src import cmd_reader
@@ -59,7 +60,7 @@ def run():
     except Exception as ex:
         print(f"Error in arguments: {ex}")
         sys.exit(1)
-
+    print(config)
     if config['local_output_only']:
         print("File will be generated in local 'output' directory only")
     
@@ -95,11 +96,13 @@ def run():
         df_raw_schemas = None
         try:
             df_raw_schemas = connector.get_db_schemas()
+            df_raw_schemas.drop(col("created")).drop(col("last_altered")).show()
         except Exception as ex:
             print(f"Error during metadata extraction from db: {ex}")
             sys.exit(1)
 
-        schemas = [schema.SCHEMA_NAME for schema in df_raw_schemas.select("SCHEMA_NAME").collect()]
+        # schemas = [schema.SCHEMA_NAME for schema in df_raw_schemas.select("SCHEMA_NAME").collect()]
+        exit(1)
         schemas_json = entry_builder.build_schemas(config, df_raw_schemas).toJSON().collect()
 
         write_jsonl(file, schemas_json)

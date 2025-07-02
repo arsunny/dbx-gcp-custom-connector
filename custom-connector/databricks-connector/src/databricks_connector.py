@@ -14,7 +14,8 @@
 
 from typing import Dict
 from pyspark.sql import SparkSession, DataFrame
-# from src.constants import EntryType
+from pyspark.sql.types import StructType, StructField, StringType, IntegerType # Import necessary types
+from src.constants import EntryType
 from src.common.connection_jar import getJarPath
 from src.common.util import fileExists
 from src.constants import JDBC_JAR
@@ -28,6 +29,7 @@ class DatabricksConnector:
         # Get jar file, allowing override for local jar file (different version / name)
         # jar_path = getJarPath(config,[DATABRICKS_SPARK_JAR,JDBC_JAR])
         jar_path = getJarPath(config,[JDBC_JAR])
+        print(jar_path)
         # Check jar files exist. Throws exception if not found
         jarsExist = fileExists(jar_path)
 
@@ -38,16 +40,24 @@ class DatabricksConnector:
 
         # self._url = f"{config['account']}.snowflakecomputing.com"
 
-        self._host = config['host'] # TODO: @sunnyar - have this in config
+        self._host = config['workspace_url'] # TODO: @sunnyar - have this in config
         self._http_path = config['http_path'] # TODO: @sunnyar - have this in config
-        self._token = config['token'] # TODO: @sunnyar - have this in config
+        self._token = "dapid6f7cdfea5ab19dd9ef338140b40bb42" # TODO: @sunnyar - have this in config
+
+        custom_schema = StructType([
+            StructField("schema_name", StringType(), True),
+        ])
+
 
         # Construct the JDBC URL for Databricks SQL Endpoint
-        # AuthMech=2 for Personal Access Token authentication
         self._jdbc_url = (
-            f"jdbc:databricks://{self._host}"
-            f"?AuthMech=3&transportMode=http&httpPath={self._http_path}"
-            f";SSL=1;UID=token;PWD={self._token}"
+            f"jdbc:databricks://{self._host}:443/default;"  # Note the semicolon here
+            f"AuthMech=3;"
+            f"transportMode=http;"
+            f"httpPath={self._http_path};"
+            f"SSL=1;"
+            f"UID=token;"
+            f"PWD={self._token}"
         )
 
         self._dbxConnectOptions = {
@@ -65,10 +75,7 @@ class DatabricksConnector:
 
     # TODO: sunnyar - update this query to get the list of schemas
     def get_db_schemas(self) -> DataFrame:
-        query = f"""
-        SELECT schema_name FROM information_schema.schemata 
-        WHERE schema_name != 'INFORMATION_SCHEMA'
-        """
+        query = "(SELECT schema_name FROM system.information_schema.schemata)"
         return self._execute(query)
 
     def _get_columns(self, schema_name: str, object_type: str) -> str:

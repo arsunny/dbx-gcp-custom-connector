@@ -34,9 +34,11 @@ def read_args():
     parser.add_argument("--workspace_url", type=str, required=True, help="Databricks workspace URL")
     parser.add_argument("--cluster_id", type=str, required=True, help="Databricks Cluster ID")
     parser.add_argument("--http_path", type=str, required=False, help="Databricks SQL HTTP path, if applicable")
+    parser.add_argument("--metastore", type=str, required=True,help="Databricks metastore to connect to")
+    parser.add_argument("--catalog", type=str, required=True, help="Databricks catalog")
 
     # Databricks PAT token from Secret Manager
-    parser.add_argument("--token_secret", type=str, required=True, help="Secret Manager ID containing Databricks PAT")
+    parser.add_argument("--password_secret", type=str, required=True, help="Secret Manager ID containing Databricks PAT")
 
     # Output destination arguments. Generate local only, or local + to Cloud Storage bucket
     output_option_group = parser.add_mutually_exclusive_group()
@@ -52,7 +54,7 @@ def read_args():
     parsed_args = validateArguments(parsed_args)
 
     # Load token from Secret Manager or local path using helper
-    parsed_args.token = loadReferencedFile(parsed_args.token_secret)
+    parsed_args.token = loadReferencedFile(parsed_args.password_secret)
 
     return vars(parsed_args)
 
