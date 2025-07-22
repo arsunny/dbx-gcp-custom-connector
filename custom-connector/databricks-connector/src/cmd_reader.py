@@ -35,7 +35,7 @@ def read_args():
     parser.add_argument("--cluster_id", type=str, required=True, help="Databricks Cluster ID")
     parser.add_argument("--http_path", type=str, required=False, help="Databricks SQL HTTP path, if applicable")
     parser.add_argument("--metastore", type=str, required=True,help="Databricks metastore to connect to")
-    parser.add_argument("--catalog", type=str, required=True, help="Databricks catalog")
+    # parser.add_argument("--catalog", type=str, required=True, help="Databricks catalog")
 
     # Databricks PAT token from Secret Manager
     parser.add_argument("--password_secret", type=str, required=True, help="Secret Manager ID containing Databricks PAT")

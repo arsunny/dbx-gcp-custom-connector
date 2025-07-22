@@ -20,7 +20,7 @@ from typing import List
 SOURCE_TYPE = "databricks"
 
 # Default JDBC JAR file.
-JDBC_JAR = "databricks-jdbc-2.7.1.jar" # TODO: sunnyar - check the version compatible
+JDBC_JAR = "DatabricksJDBC42.jar" # TODO: sunnyar - check the version compatible
 
 # Allow common bootstrap to load connector for specific datasource
 CONNECTOR_MODULE = "src.databricks_connector"
@@ -28,7 +28,7 @@ CONNECTOR_CLASS = "DatabricksConnector"
 
 # Value to test for if column is nullable. Snowflake specific. 
 # Matches value in is_nullable column from _get_columns
-# IS_NULLABLE_TRUE = "Y"
+IS_NULLABLE_TRUE = "Y"
 
 class EntryType(enum.Enum):
     """Hierarchy of Databricks Unity Catalog entries"""
