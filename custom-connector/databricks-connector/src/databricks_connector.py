@@ -70,29 +70,6 @@ class DatabricksConnector:
 
         self._cursor = self._connection.cursor()
 
-        # # Construct the JDBC URL for Databricks SQL Endpoint
-        # self._jdbc_url = (
-        #     f"jdbc:databricks://{self._host}:443/default;"  # Note the semicolon here
-        #     f"AuthMech=3;"
-        #     f"transportMode=http;"
-        #     f"httpPath={self._http_path};"
-        #     f"SSL=1;"
-        #     f"UID=token;"
-        #     f"PWD={self._token}"
-        # )
-
-        # self._dbxConnectOptions = {
-        #     "url": self._jdbc_url,
-        #     "driver": "com.databricks.client.jdbc.Driver" # Standard Databricks JDBC driver
-        # }
-
-    # def _execute(self, query: str) -> DataFrame:
-    #     _dbxConnectOptions = self._dbxConnectOptions
-    #
-    #     return self._spark.read.format("jdbc") \
-    #         .options(**self._dbxConnectOptions) \
-    #         .option("query", query) \
-    #         .load()
     def _execute(self, query: str) -> list:
         _cursor = self._cursor
 
@@ -123,4 +100,31 @@ class DatabricksConnector:
         else:
             object_type = ["VIEW"]
         query = _get_columns(schema_name, object_type)
+        return self._execute(query)
+
+    def get_models(self, schema_name: str) -> DataFrame:
+        query = f"""
+            SELECT model_name, version, creation_timestamp, created_by 
+            FROM system.information_schema.model_versions 
+            WHERE schema_name = '{schema_name}'
+            AND schema_name NOT IN ('default', 'information_schema')
+        """
+        return self._execute(query)
+
+    def get_functions(self, schema_name: str) -> DataFrame:
+        query = f"""
+            SELECT function_name, function_language, is_deterministic, data_type 
+            FROM system.information_schema.functions 
+            WHERE schema_name = '{schema_name}'
+            AND schema_name NOT IN ('default', 'information_schema')
+        """
+        return self._execute(query)
+
+    def get_volumes(self, schema_name: str) -> DataFrame:
+        query = f"""
+            SELECT volume_catalog, volume_schema, volume_name, comment 
+            FROM system.information_schema.volumes 
+            WHERE volume_schema = '{schema_name}'
+            AND volume_schema NOT IN ('default', 'information_schema')
+        """
         return self._execute(query)

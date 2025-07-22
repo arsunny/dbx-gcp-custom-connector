@@ -20,7 +20,7 @@ from typing import List
 SOURCE_TYPE = "databricks"
 
 # Default JDBC JAR file.
-JDBC_JAR = "DatabricksJDBC42.jar" # TODO: sunnyar - check the version compatible
+JDBC_JAR = "DatabricksJDBC42.jar"
 
 # Allow common bootstrap to load connector for specific datasource
 CONNECTOR_MODULE = "src.databricks_connector"
@@ -37,6 +37,10 @@ class EntryType(enum.Enum):
     SCHEMA: str = "projects/{project}/locations/{location}/entryTypes/databricks-schema"
     TABLE: str = "projects/{project}/locations/{location}/entryTypes/databricks-table"
     VIEW: str = "projects/{project}/locations/{location}/entryTypes/databricks-view"
+    FUNCTION: str = "projects/{project}/locations/{location}/entryTypes/databricks-function"
+    MODEL: str = "projects/{project}/locations/{location}/entryTypes/databricks-model"
+    VOLUME: str = "projects/{project}/locations/{location}/entryTypes/databricks-volume"
+
 
 # Top-level types in EntryType hierarchy which will be written to file before schema processing starts
 TOP_ENTRY_HIERARCHY : List[EntryType] = [EntryType.METASTORE, EntryType.CATALOG]
@@ -45,9 +49,14 @@ TOP_ENTRY_HIERARCHY : List[EntryType] = [EntryType.METASTORE, EntryType.CATALOG]
 COLLECTION_ENTRY : EntryType = EntryType.SCHEMA
 
 # DB objects to extract metadata for
-DB_OBJECT_TYPES_TO_PROCESS : List[EntryType] = [EntryType.TABLE, EntryType.VIEW]
+DB_OBJECT_TYPES_TO_PROCESS : List[EntryType] = [
+    EntryType.TABLE,
+    EntryType.VIEW,
+    EntryType.FUNCTION,
+    EntryType.MODEL,
+    EntryType.VOLUME
+]
 
 # metadata file name
-# TODO: @sunnyar - chcek this how files can be named
 def generateFileName(config: dict[str:str]) -> str:
     return f"{SOURCE_TYPE}-{config['metastore']}-{config['catalog']}.jsonl"
