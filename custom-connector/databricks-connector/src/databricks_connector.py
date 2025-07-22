@@ -114,7 +114,7 @@ class DatabricksConnector:
     def get_functions(self, schema_name: str) -> DataFrame:
         query = f"""
             SELECT function_name, function_language, is_deterministic, data_type 
-            FROM system.information_schema.functions 
+            FROM '{catalog_name}'.information_schema.functions 
             WHERE schema_name = '{schema_name}'
             AND schema_name NOT IN ('default', 'information_schema')
         """
