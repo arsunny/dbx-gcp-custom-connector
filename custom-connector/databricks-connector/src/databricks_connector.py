@@ -106,17 +106,25 @@ class DatabricksConnector:
         query = f"""
             SELECT model_name, version, creation_timestamp, created_by 
             FROM system.information_schema.model_versions 
-            WHERE schema_name = '{schema_name}'
-            AND schema_name NOT IN ('default', 'information_schema')
+            WHERE model_schema = '{schema_name}'
+            AND model_schema NOT IN ('default', 'information_schema')
         """
-        return self._execute(query)
+        try:
+            return self._execute(query)
+        except Exception as e:
+            if "model_versions" in str(e) or "cannot be found" in str(e):
+                # Graceful fallback if model_versions table doesn't exist
+                return self._spark.createDataFrame([], schema="model_name STRING, version STRING, creation_timestamp TIMESTAMP, created_by STRING")
+            else:
+                raise  # Bubble up unexpected errors
 
     def get_functions(self, schema_name: str) -> DataFrame:
         query = f"""
-            SELECT function_name, function_language, is_deterministic, data_type 
-            FROM '{catalog_name}'.information_schema.functions 
-            WHERE schema_name = '{schema_name}'
-            AND schema_name NOT IN ('default', 'information_schema')
+            SELECT routine_name, routine_type
+            FROM system.information_schema.routines
+            WHERE routine_type = 'FUNCTION'
+            AND routine_schema = '{schema_name}'
+            AND routine_schema NOT IN ('default', 'information_schema')
         """
         return self._execute(query)
 
