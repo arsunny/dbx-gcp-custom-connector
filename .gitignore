@@ -195,3 +195,5 @@ cython_debug/
 .cursorindexingignore
 
 .DS_Store
+output/
+venv_3.12/
