@@ -20,6 +20,7 @@ from src.constants import SOURCE_TYPE
 from src.constants import COLLECTION_ENTRY
 from src import name_builder as nb
 
+
 # DB-specific value which indicates true
 from src.constants import IS_NULLABLE_TRUE
 
@@ -217,3 +218,52 @@ def build_dataset(config, df_raw, db_schema, entry_type):
 
     df = convert_to_import_items(df, [SCHEMA_KEY, entry_aspect_name])
     return df
+
+
+def build_other_category_dataset(config, df_raw, db_schema, entry_type, name_col):
+    """
+    Build entry dataset for object types that do not have field-level schema (e.g., models, volumes, functions).
+    
+    Args:
+        config: Dictionary with config data.
+        df_raw: Spark DataFrame with raw metadata.
+        db_schema: Schema name in Unity Catalog.
+        entry_type: Enum (EntryType.MODEL, EntryType.FUNCTION, EntryType.VOLUME).
+        name_col: Column name in df_raw that should be used as the object name.
+
+    Returns:
+        A Spark DataFrame with entry metadata formatted for Dataplex ingestion.
+    """
+
+    # Create UDFs for name and FQN
+    create_name_udf = F.udf(lambda x: nb.create_name(config, entry_type, db_schema, x), StringType())
+    create_fqn_udf = F.udf(lambda x: nb.create_fqn(config, entry_type, db_schema, x), StringType())
+
+    # Fixed values
+    parent_name = nb.create_parent_name(config, entry_type, db_schema)
+    full_entry_type = entry_type.value.format(
+        project=config["target_project_id"],
+        location=config["target_location_id"]
+    )
+    entry_aspect_name = nb.create_entry_aspect_name(config, entry_type)
+
+    # Base transformation
+    df = df_raw.withColumn(KEY_NAME, create_name_udf(F.col(name_col))) \
+               .withColumn(KEY_FQN, create_fqn_udf(F.col(name_col))) \
+               .withColumn(KEY_ENTRY_TYPE, F.lit(full_entry_type)) \
+               .withColumn(KEY_PARENT_ENTRY, F.lit(parent_name)) \
+               .withColumn(KEY_ENTRY_SOURCE, create_entry_source(F.col(name_col))) \
+               .withColumn(KEY_ENTRY_ASPECT, create_entry_aspect(entry_aspect_name)) \
+               .drop(name_col)
+
+    # Finalize structure
+    df = df.select(
+        F.col(KEY_NAME),
+        F.col(KEY_FQN),
+        F.col(KEY_ENTRY_TYPE),
+        F.col(KEY_PARENT_ENTRY),
+        F.col(KEY_ENTRY_SOURCE),
+        F.map_from_arrays(F.array(F.lit(entry_aspect_name)), F.array(F.col(KEY_ENTRY_ASPECT))).alias(KEY_ASPECTS)
+    )
+
+    return convert_to_import_items(df, [entry_aspect_name])

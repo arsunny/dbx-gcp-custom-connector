@@ -50,17 +50,19 @@ def process_dataset(
     # Dispatch to correct connector method
     if entry_type in [EntryType.TABLE, EntryType.VIEW]:
         df_raw = connector.get_dataset(schema_name, entry_type)
+        df = entry_builder.build_dataset(config, df_raw, schema_name, entry_type)
     elif entry_type == EntryType.MODEL:
         df_raw = connector.get_models(schema_name)
+        df = entry_builder.build_other_category_dataset(config, df_raw, schema_name, EntryType.MODEL, name_col="model_name")
     elif entry_type == EntryType.FUNCTION:
         df_raw = connector.get_functions(schema_name)
+        df = entry_builder.build_other_category_dataset(config, df_raw, schema_name, EntryType.FUNCTION, name_col="routine_name")
     elif entry_type == EntryType.VOLUME:
         df_raw = connector.get_volumes(schema_name)
+        df = entry_builder.build_other_category_dataset(config, df_raw, schema_name, EntryType.VOLUME, name_col="volume_name")
     else:
         raise ValueError(f"Unsupported entry type: {entry_type}")
-
     # Transform to standardized entry format
-    df = entry_builder.build_dataset(config, df_raw, schema_name, entry_type)
     return df.toJSON().collect()
 
 def run():

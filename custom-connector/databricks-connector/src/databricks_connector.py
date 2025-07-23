@@ -20,7 +20,10 @@ from src.common.connection_jar import getJarPath
 from src.common.util import fileExists
 from src.constants import JDBC_JAR
 from databricks import sql
+import logging
 
+
+logger = logging.getLogger(__name__)
 
 def _get_columns(schema_name: str, object_type: str) -> str:
     """Returns list of columns a tables or view"""
@@ -104,7 +107,7 @@ class DatabricksConnector:
 
     def get_models(self, schema_name: str) -> DataFrame:
         query = f"""
-            SELECT model_name, version, creation_timestamp, created_by 
+            SELECT model_name,  version, creation_timestamp, created_by
             FROM system.information_schema.model_versions 
             WHERE model_schema = '{schema_name}'
             AND model_schema NOT IN ('default', 'information_schema')
@@ -118,6 +121,7 @@ class DatabricksConnector:
             else:
                 raise  # Bubble up unexpected errors
 
+
     def get_functions(self, schema_name: str) -> DataFrame:
         query = f"""
             SELECT routine_name, routine_type
@@ -126,7 +130,20 @@ class DatabricksConnector:
             AND routine_schema = '{schema_name}'
             AND routine_schema NOT IN ('default', 'information_schema')
         """
-        return self._execute(query)
+        try:
+            return self._execute(query)
+        except Exception as e:
+            err_msg = str(e).lower()
+            if "routines" in err_msg or "not found" in err_msg or "cannot be found" in err_msg:
+                logger.warning(f"`routines` table is unavailable for schema '{schema_name}'. Returning empty DataFrame.")
+                return self._spark.createDataFrame([], schema="""
+                    routine_name STRING,
+                    routine_type STRING
+                """)
+            else:
+                logger.error(f"Unexpected error while querying routines: {e}")
+                raise RuntimeError(f"Error in get_functions for schema '{schema_name}'") from e
+
 
     def get_volumes(self, schema_name: str) -> DataFrame:
         query = f"""
@@ -135,4 +152,18 @@ class DatabricksConnector:
             WHERE volume_schema = '{schema_name}'
             AND volume_schema NOT IN ('default', 'information_schema')
         """
-        return self._execute(query)
+        try:
+            return self._execute(query)
+        except Exception as e:
+            err_msg = str(e).lower()
+            if "volumes" in err_msg or "not found" in err_msg or "cannot be found" in err_msg:
+                logger.warning(f"`volumes` table is unavailable for schema '{schema_name}'. Returning empty DataFrame.")
+                return self._spark.createDataFrame([], schema="""
+                    volume_catalog STRING,
+                    volume_schema STRING,
+                    volume_name STRING,
+                    comment STRING
+                """)
+            else:
+                logger.error(f"Unexpected error while querying volumes: {e}")
+                raise RuntimeError(f"Error in get_volumes for schema '{schema_name}'") from e
