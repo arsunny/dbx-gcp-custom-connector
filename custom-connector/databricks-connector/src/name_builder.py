@@ -40,6 +40,9 @@ def create_fqn(config: Dict[str, str], entry_type: EntryType,
     if entry_type in [EntryType.TABLE, EntryType.VIEW]:
         database = create_fqn(config, EntryType.CATALOG)
         return f"{database}.{schema_name}.{table_name}"
+    if entry_type in [EntryType.FUNCTION, EntryType.MODEL, EntryType.VOLUME]:
+        database = create_fqn(config, EntryType.CATALOG)
+        return f"{database}.{schema_name}.{table_name}"
     return ""
 
 
@@ -68,6 +71,15 @@ def create_name(config: Dict[str, str], entry_type: EntryType,
     if entry_type == EntryType.VIEW:
         schema = create_name(config, EntryType.SCHEMA, schema_name)
         return f"{schema}/views/{table_name}"
+    if entry_type == EntryType.FUNCTION:
+        schema = create_name(config, EntryType.SCHEMA, schema_name)
+        return f"{schema}/functions/{table_name}"
+    if entry_type == EntryType.MODEL:
+        schema = create_name(config, EntryType.SCHEMA, schema_name)
+        return f"{schema}/models/{table_name}"
+    if entry_type == EntryType.VOLUME:
+        schema = create_name(config, EntryType.SCHEMA, schema_name)
+        return f"{schema}/volumes/{table_name}"
     return ""
 
 
