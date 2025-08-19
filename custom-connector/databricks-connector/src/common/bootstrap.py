@@ -17,37 +17,53 @@ from typing import Dict
 import os
 import importlib
 import sys
+from pyspark.sql.functions import col
 # import google.cloud.logging as gcp_logging
 # import logging
 from src import cmd_reader
-# from src.constants import EntryType
+from src.constants import EntryType
 from src.constants import SOURCE_TYPE
-# from src.constants import DB_OBJECT_TYPES_TO_PROCESS
+from src.constants import DB_OBJECT_TYPES_TO_PROCESS
 from src.constants import TOP_ENTRY_HIERARCHY
 from src.constants import generateFileName
 from src.constants import CONNECTOR_MODULE
 from src.constants import CONNECTOR_CLASS
-# from src.common import entry_builder
+from src.common import entry_builder
 # from src.common import gcs_uploader
 from src.common import top_entry_builder
 # from src.common.util import isRunningInContainer
-# from src.common.ExternalSourceConnector import IExternalSourceConnector
+from src.common.ExternalSourceConnector import IExternalSourceConnector
 
-# def write_jsonl(output_file, json_strings):
-#     """Writes a list of string to the file in JSONL format."""
-#     for string in json_strings:
-#         output_file.write(string + "\n")
+def write_jsonl(output_file, json_strings):
+    """Writes a list of string to the file in JSONL format."""
+    for string in json_strings:
+        output_file.write(string + "\n")
 
-# def process_dataset(
-#     connector: IExternalSourceConnector,
-#     config: Dict[str, str],
-#     schema_name: str,
-#     entry_type: EntryType,
-# ):
-#     """Builds dataset and converts it to jsonl."""
-#     df_raw = connector.get_dataset(schema_name, entry_type)
-#     df = entry_builder.build_dataset(config, df_raw, schema_name, entry_type)
-#     return df.toJSON().collect()
+def process_dataset(
+    connector: IExternalSourceConnector,
+    config: Dict[str, str],
+    schema_name: str,
+    entry_type: EntryType,
+):
+    """Builds dataset and converts it to jsonl."""
+
+    # Dispatch to correct connector method
+    if entry_type in [EntryType.TABLE, EntryType.VIEW]:
+        df_raw = connector.get_dataset(schema_name, entry_type)
+        df = entry_builder.build_dataset(config, df_raw, schema_name, entry_type)
+    elif entry_type == EntryType.MODEL:
+        df_raw = connector.get_models(schema_name)
+        df = entry_builder.build_other_category_dataset(config, df_raw, schema_name, EntryType.MODEL, name_col="model_name")
+    elif entry_type == EntryType.FUNCTION:
+        df_raw = connector.get_functions(schema_name)
+        df = entry_builder.build_other_category_dataset(config, df_raw, schema_name, EntryType.FUNCTION, name_col="routine_name")
+    elif entry_type == EntryType.VOLUME:
+        df_raw = connector.get_volumes(schema_name)
+        df = entry_builder.build_other_category_dataset(config, df_raw, schema_name, EntryType.VOLUME, name_col="volume_name")
+    else:
+        raise ValueError(f"Unsupported entry type: {entry_type}")
+    # Transform to standardized entry format
+    return df.toJSON().collect()
 
 def run():
     """Runs a pipeline."""
@@ -59,7 +75,7 @@ def run():
     except Exception as ex:
         print(f"Error in arguments: {ex}")
         sys.exit(1)
-
+    print(config)
     if config['local_output_only']:
         print("File will be generated in local 'output' directory only")
     
@@ -76,43 +92,49 @@ def run():
             print(f"Error setting up connector for {SOURCE_TYPE}: {ex}")
             raise Exception(ex)
 
+    df_catalogs = connector.get_metastore_catalogs()
+    df_catalogs.show()
+    catalogs = [catalog.catalog_name for catalog in df_catalogs.select("catalog_name").collect()]
     entries_count = 0
 
-    # Build the output file name from connection details
-    FILENAME = generateFileName(config) 
+    for catalog in catalogs:
+        config['catalog'] = catalog
+        # Build the output file name from connection details
+        FILENAME = generateFileName(config)
 
-    output_path = './output'
-    if not os.path.exists(output_path):
-        os.mkdir(output_path)
+        output_path = './output'
+        if not os.path.exists(output_path):
+            os.mkdir(output_path)
 
-    with open(f"{output_path}/{FILENAME}", "w", encoding="utf-8") as file:
-        # First write the top level entry types to file which can be generated without processing the schemas
-        for entry in TOP_ENTRY_HIERARCHY:
-            file.writelines(top_entry_builder.create(config, entry))
-            file.writelines("\n")
+        with open(f"{output_path}/{FILENAME}", "w", encoding="utf-8") as file:
+            # First write the top level entry types to file which can be generated without processing the schemas
+            for entry in TOP_ENTRY_HIERARCHY:
+                file.writelines(top_entry_builder.create(config, entry))
+                file.writelines("\n")
 
-        # Collect list of schemas for extract
-        df_raw_schemas = None
-        try:
-            df_raw_schemas = connector.get_db_schemas()
-        except Exception as ex:
-            print(f"Error during metadata extraction from db: {ex}")
-            sys.exit(1)
+            # Collect list of schemas for extract
+            df_raw_schemas = None
+            try:
+                df_raw_schemas = connector.get_db_schemas(catalog)
+                # df_raw_schemas.drop(col("created")).drop(col("last_altered")).show()
+            except Exception as ex:
+                print(f"Error during metadata extraction from db: {ex}")
+                sys.exit(1)
 
-        schemas = [schema.SCHEMA_NAME for schema in df_raw_schemas.select("SCHEMA_NAME").collect()]
-        schemas_json = entry_builder.build_schemas(config, df_raw_schemas).toJSON().collect()
+            schemas = [schema.SCHEMA_NAME for schema in df_raw_schemas.select("SCHEMA_NAME").collect()]
+            schemas_json = entry_builder.build_schemas(config, df_raw_schemas).toJSON().collect()
+            print(schemas_json)
+            write_jsonl(file, schemas_json)
 
-        write_jsonl(file, schemas_json)
+            print("Processing schemas..")
 
-        print("Processing schemas..")
-
-        # Collect metadata for target db objects in each schema
-        for schema in schemas:
-            for object_type in DB_OBJECT_TYPES_TO_PROCESS:
-                objects_json = process_dataset(connector, config, schema, object_type)
-                print(f"Processed {len(objects_json)} {object_type.name}S in {schema}")
-                entries_count += len(objects_json)
-                write_jsonl(file, objects_json)
+            # Collect metadata for target db objects in each schema
+            for schema in schemas:
+                for object_type in DB_OBJECT_TYPES_TO_PROCESS:
+                    objects_json = process_dataset(connector, config, schema, object_type)
+                    print(f"Processed {len(objects_json)} {object_type.name}S in {schema}")
+                    entries_count += len(objects_json)
+                    write_jsonl(file, objects_json)
 
     print(f"{entries_count} rows written to file {FILENAME}") 
 
