@@ -17,7 +17,7 @@
 import enum
 from typing import List
 
-SOURCE_TYPE = "databricks"
+SOURCE_TYPE = "custom"
 
 # Default JDBC JAR file.
 JDBC_JAR = "DatabricksJDBC42.jar"

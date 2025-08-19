@@ -28,13 +28,13 @@ def read_args():
     parser.add_argument("--target_entry_group_id", type=str, required=True,
                         help="Dataplex Entry Group ID to import metadata into")
     
-    parser.add_argument("--jar", type=str, required=False, help="path to jar file")
+    # parser.add_argument("--jar", type=str, required=False, help="path to jar file")
 
     # Databricks specific arguments
     parser.add_argument("--workspace_url", type=str, required=True, help="Databricks workspace URL")
-    parser.add_argument("--cluster_id", type=str, required=True, help="Databricks Cluster ID")
-    parser.add_argument("--http_path", type=str, required=False, help="Databricks SQL HTTP path, if applicable")
-    parser.add_argument("--metastore", type=str, required=True,help="Databricks metastore to connect to")
+    # parser.add_argument("--cluster_id", type=str, required=True, help="Databricks Cluster ID")
+    parser.add_argument("--http_path", type=str, required=True, help="Databricks SQL HTTP path, if applicable")
+    parser.add_argument("--metastore", type=str, required=True, help="Databricks metastore to connect to")
     # parser.add_argument("--catalog", type=str, required=True, help="Databricks catalog")
 
     # Databricks PAT token from Secret Manager

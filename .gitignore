@@ -196,4 +196,4 @@ cython_debug/
 
 .DS_Store
 output/
-venv_3.12/
+venv*/
