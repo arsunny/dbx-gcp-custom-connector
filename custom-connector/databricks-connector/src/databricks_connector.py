@@ -14,11 +14,10 @@
 
 from typing import Dict
 from pyspark.sql import SparkSession, DataFrame
-from pyspark.sql.types import StructType, StructField, StringType, IntegerType  # Import necessary types
+from pyspark.sql.types import StructType, StructField, StringType  # Import necessary types
 from src.constants import EntryType
 from src.common.connection_jar import getJarPath
 from src.common.util import fileExists
-from src.constants import JDBC_JAR
 from databricks import sql
 import logging
 
@@ -49,26 +48,18 @@ class DatabricksConnector:
     def __init__(self, config: Dict[str, str]):
         # PySpark entrypoint
 
-        # Get jar file, allowing override for local jar file (different version / name)
-        # jar_path = getJarPath(config,[DATABRICKS_SPARK_JAR,JDBC_JAR])
-        # jar_path = getJarPath(config,[JDBC_JAR])
-        # print(jar_path)
-        # Check jar files exist. Throws exception if not found
-        # jarsExist = fileExists(jar_path)
-
         self._spark = SparkSession.builder.appName("DatabricksUnityCatalogIngestor") \
             .config("spark.log.level", "INFO") \
             .getOrCreate()
 
-        self._host = config['workspace_url']  # TODO: @sunnyar - have this in config
-        self._http_path = config['http_path']  # TODO: @sunnyar - have this in config
-        self._token = config['token']  # TODO: @sunnyar - have this in config
+        self._host = config['workspace_url']  
+        self._http_path = config['http_path']
+        self._token = config['token']
 
         self._connection = sql.connect(
             server_hostname=self._host,
             http_path=self._http_path,
-            access_token=self._token,
-            _tls_no_verify=True
+            access_token=self._token
         )
 
         self._cursor = self._connection.cursor()
