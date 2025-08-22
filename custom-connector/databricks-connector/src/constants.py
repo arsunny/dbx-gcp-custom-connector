@@ -19,9 +19,6 @@ from typing import List
 
 SOURCE_TYPE = "custom"
 
-# Default JDBC JAR file.
-JDBC_JAR = "DatabricksJDBC42.jar"
-
 # Allow common bootstrap to load connector for specific datasource
 CONNECTOR_MODULE = "src.databricks_connector"
 CONNECTOR_CLASS = "DatabricksConnector"

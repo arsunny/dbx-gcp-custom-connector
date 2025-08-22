@@ -27,15 +27,11 @@ def read_args():
                         help="Google Cloud region metadata will be imported into")
     parser.add_argument("--target_entry_group_id", type=str, required=True,
                         help="Dataplex Entry Group ID to import metadata into")
-    
-    # parser.add_argument("--jar", type=str, required=False, help="path to jar file")
 
     # Databricks specific arguments
     parser.add_argument("--workspace_url", type=str, required=True, help="Databricks workspace URL")
-    # parser.add_argument("--cluster_id", type=str, required=True, help="Databricks Cluster ID")
     parser.add_argument("--http_path", type=str, required=True, help="Databricks SQL HTTP path, if applicable")
     parser.add_argument("--metastore", type=str, required=True, help="Databricks metastore to connect to")
-    # parser.add_argument("--catalog", type=str, required=True, help="Databricks catalog")
 
     # Databricks PAT token from Secret Manager
     parser.add_argument("--password_secret", type=str, required=True, help="Secret Manager ID containing Databricks PAT")
@@ -58,12 +54,3 @@ def read_args():
 
     return vars(parsed_args)
 
-# python main.py \
-#   --target_project_id=your-project \
-#   --target_location_id=us-central1 \
-#   --target_entry_group_id=databricks-group \
-#   --workspace_url=https://<your-workspace>.cloud.databricks.com \
-#   --cluster_id=abcd1234 \
-#   --http_path=/sql/1.0/warehouses/xyz \
-#   --token_secret=secret:databricks-pat \
-#   --local_output_only
