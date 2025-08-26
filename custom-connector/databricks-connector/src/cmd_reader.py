@@ -32,7 +32,7 @@ def read_args():
 
     # Databricks specific arguments
     parser.add_argument("--workspace_url", type=str, required=True, help="Databricks workspace URL")
-    parser.add_argument("--cluster_id", type=str, required=True, help="Databricks Cluster ID")
+    #parser.add_argument("--cluster_id", type=str, required=True, help="Databricks Cluster ID")
     parser.add_argument("--http_path", type=str, required=False, help="Databricks SQL HTTP path, if applicable")
     parser.add_argument("--metastore", type=str, required=True,help="Databricks metastore to connect to")
     # parser.add_argument("--catalog", type=str, required=True, help="Databricks catalog")

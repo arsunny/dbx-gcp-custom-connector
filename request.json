@@ -1,0 +1,26 @@
+{
+  "type": "IMPORT",
+  "import_spec": {
+    "source_storage_uri": "gs://dbx-metadata/metadata/",
+    "entry_sync_mode": "FULL",
+    "aspect_sync_mode": "INCREMENTAL",
+    "log_level": "DEBUG",
+    "scope": {
+      "entry_groups": ["projects/sunnyar-poc-project/locations/us-central1/entryGroups/databricks"],
+      "entry_types": [
+        "projects/sunnyar-poc-project/locations/us-central1/entryTypes/databricks-metastore",
+        "projects/sunnyar-poc-project/locations/us-central1/entryTypes/databricks-catalog",
+        "projects/sunnyar-poc-project/locations/us-central1/entryTypes/databricks-schema",
+        "projects/sunnyar-poc-project/locations/us-central1/entryTypes/databricks-table",
+        "projects/sunnyar-poc-project/locations/us-central1/entryTypes/databricks-view"],
+
+      "aspect_types": [
+        "projects/sunnyar-poc-project/locations/us-central1/aspectTypes/databricks-metastore",
+        "projects/dataplex-types/locations/global/aspectTypes/schema",
+        "projects/sunnyar-poc-project/locations/us-central1/aspectTypes/databricks-catalog",
+        "projects/sunnyar-poc-project/locations/us-central1/aspectTypes/databricks-schema",
+        "projects/sunnyar-poc-project/locations/us-central1/aspectTypes/databricks-table",
+        "projects/sunnyar-poc-project/locations/us-central1/aspectTypes/databricks-view"]
+      }
+    }
+}
