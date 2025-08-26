@@ -18,8 +18,6 @@ import os
 import importlib
 import sys
 from pyspark.sql.functions import col
-# import google.cloud.logging as gcp_logging
-# import logging
 from src import cmd_reader
 from src.constants import EntryType
 from src.constants import SOURCE_TYPE
@@ -29,9 +27,9 @@ from src.constants import generateFileName
 from src.constants import CONNECTOR_MODULE
 from src.constants import CONNECTOR_CLASS
 from src.common import entry_builder
-# from src.common import gcs_uploader
+from src.common import gcs_uploader
 from src.common import top_entry_builder
-# from src.common.util import isRunningInContainer
+from src.common.util import isRunningInContainer
 from src.common.ExternalSourceConnector import IExternalSourceConnector
 
 def write_jsonl(output_file, json_strings):
@@ -116,7 +114,6 @@ def run():
             df_raw_schemas = None
             try:
                 df_raw_schemas = connector.get_db_schemas(catalog)
-                # df_raw_schemas.drop(col("created")).drop(col("last_altered")).show()
             except Exception as ex:
                 print(f"Error during metadata extraction from db: {ex}")
                 sys.exit(1)

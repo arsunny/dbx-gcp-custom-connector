@@ -18,9 +18,12 @@ import enum
 from typing import List
 
 SOURCE_TYPE = "custom"
+<<<<<<< HEAD
 
 # Default JDBC JAR file.
 JDBC_JAR = "DatabricksJDBC42.jar"
+=======
+>>>>>>> ce659fe1c02088bb74e13e34c5d42c80405517e5
 
 # Allow common bootstrap to load connector for specific datasource
 CONNECTOR_MODULE = "src.databricks_connector"

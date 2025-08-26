@@ -28,10 +28,6 @@ def loadReferencedFile(file_path_or_secret_id) -> str:
         print(secret_id)
         try:
             client = secretmanager.SecretManagerServiceClient()
-            # project_id = os.environ.get("GOOGLE_CLOUD_PROJECT")
-            # print(project_id)
-            # if not project_id:
-            #     raise Exception("GOOGLE_CLOUD_PROJECT environment variable is not set.")
             name = f"{secret_id}/versions/latest"
             response = client.access_secret_version(request={"name": name})
             return response.payload.data.decode("UTF-8")

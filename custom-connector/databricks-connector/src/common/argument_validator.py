@@ -38,8 +38,6 @@ def validateArguments(parsed_args):
 
         validateSecretID(parsed_args.password_secret)
 
-        # parsed_args.password = get_password(parsed_args.password_secret)
-
     return parsed_args
 
 

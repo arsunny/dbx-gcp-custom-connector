@@ -15,7 +15,7 @@
 """Creates entries with PySpark."""
 import pyspark.sql.functions as F
 from pyspark.sql.types import StringType
-# from src.datatype_mapper import get_catalog_metadata_type
+from src.datatype_mapper import get_catalog_metadata_type
 from src.constants import SOURCE_TYPE
 from src.constants import COLLECTION_ENTRY
 from src import name_builder as nb
@@ -65,8 +65,7 @@ SCHEMA_KEY = "dataplex-types.global.schema"
 @F.udf(returnType=StringType())
 def choose_metadata_type_udf(data_type: str):
     """Choose the dataplex metadata type based on native source type."""
-    # return get_catalog_metadata_type(data_type)
-    return None
+    return get_catalog_metadata_type(data_type)
 
 def create_entry_source(column):
     """Create Entry Source segment."""
