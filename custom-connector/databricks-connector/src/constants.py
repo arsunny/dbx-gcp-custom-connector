@@ -17,7 +17,8 @@
 import enum
 from typing import List
 
-SOURCE_TYPE = "custom"
+SOURCE_TYPE = "UnityCatalog"
+PLATFORM = "Databricks"
 
 # Allow common bootstrap to load connector for specific datasource
 CONNECTOR_MODULE = "src.databricks_connector"

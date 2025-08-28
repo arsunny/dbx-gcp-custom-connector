@@ -32,7 +32,8 @@ def _get_columns(schema_name: str, object_type: str) -> str:
     quoted_object_types = ", ".join(f"'{ot}'" for ot in object_type)
 
     return (f"SELECT c.table_name, c.column_name,  "
-            f"c.data_type, c.is_nullable "
+            f"c.data_type, c.is_nullable, "
+            f"c.column_default, c.comment "
             f"FROM system.information_schema.columns c "
             f"JOIN system.information_schema.tables t ON  "
             f"c.table_catalog = t.table_catalog "

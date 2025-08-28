@@ -16,7 +16,7 @@
 import pyspark.sql.functions as F
 from pyspark.sql.types import StringType
 from src.datatype_mapper import get_catalog_metadata_type
-from src.constants import SOURCE_TYPE
+from src.constants import SOURCE_TYPE, PLATFORM
 from src.constants import COLLECTION_ENTRY
 from src import name_builder as nb
 
@@ -40,11 +40,14 @@ KEY_ASPECTS = 'aspects'
 KEY_DATA = 'data'
 KEY_DATA_TYPE = 'dataType'
 KEY_METADATA_TYPE = 'metadataType'
+KEY_DEFAULT_VALUE = 'defaultValue'
+KEY_DESCRIPTION = 'description'
 
 KEY_ENTRY_ASPECT = 'entry_aspect'
 
 KEY_FIELDS = 'fields'
 KEY_SYSTEM = 'system'
+KEY_PLATFORM = 'platform'
 KEY_SCHEMA = 'schema'
 
 KEY_COLUMNS = 'columns'
@@ -54,6 +57,8 @@ COLUMN_DATA_TYPE = 'DATA_TYPE'
 COLUMN_COLUMN_NAME = 'COLUMN_NAME'
 COLUMN_IS_NULLABLE = 'IS_NULLABLE'
 COLUMN_SCHEMA_NAME = 'SCHEMA_NAME'
+COLUMN_DEFAULT_VALUE = 'COLUMN_DEFAULT'
+COLUMN_DESCRIPTION = 'COMMENT'
 
 # Dataplex constants
 VALUE_NULLABLE = 'NULLABLE'
@@ -72,7 +77,9 @@ def create_entry_source(column):
     return F.named_struct(F.lit(KEY_DISPLAY_NAME),
                           column,
                           F.lit(KEY_SYSTEM),
-                          F.lit(SOURCE_TYPE))
+                          F.lit(SOURCE_TYPE),
+                          F.lit(KEY_PLATFORM),
+                          F.lit(PLATFORM))
 
 
 def create_entry_aspect(entry_aspect_name):
@@ -160,11 +167,13 @@ def build_dataset(config, df_raw, db_schema, entry_type):
         .drop(COLUMN_IS_NULLABLE) \
         .withColumnRenamed(COLUMN_DATA_TYPE, KEY_DATA_TYPE) \
         .withColumn(KEY_METADATA_TYPE, choose_metadata_type_udf(KEY_DATA_TYPE)) \
-        .withColumnRenamed(COLUMN_COLUMN_NAME, KEY_NAME)
+        .withColumnRenamed(COLUMN_COLUMN_NAME, KEY_NAME) \
+        .withColumnRenamed(COLUMN_DEFAULT_VALUE, KEY_DEFAULT_VALUE) \
+        .withColumnRenamed(COLUMN_DESCRIPTION, KEY_DESCRIPTION)
 
     # transformation below aggregates fields, denormalizing the table
     # TABLE_NAME becomes top-level field, rest put into array type "fields"
-    aspect_columns = [KEY_NAME, KEY_MODE, KEY_DATA_TYPE, KEY_METADATA_TYPE]
+    aspect_columns = [KEY_NAME, KEY_MODE, KEY_DATA_TYPE, KEY_METADATA_TYPE, KEY_DEFAULT_VALUE, KEY_DESCRIPTION]
     df = df.withColumn(KEY_COLUMNS, F.struct(aspect_columns)) \
         .groupby(COLUMN_TABLE_NAME) \
         .agg(F.collect_list(KEY_COLUMNS).alias(KEY_FIELDS))
