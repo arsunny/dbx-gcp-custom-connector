@@ -93,9 +93,9 @@ def run():
     df_catalogs = connector.get_metastore_catalogs()
     df_catalogs.show()
     catalogs = [catalog.catalog_name for catalog in df_catalogs.select("catalog_name").collect()]
-    entries_count = 0
 
     for catalog in catalogs:
+        entries_count = 0
         config['catalog'] = catalog
         # Build the output file name from connection details
         FILENAME = generateFileName(config)
@@ -107,6 +107,7 @@ def run():
         with open(f"{output_path}/{FILENAME}", "w", encoding="utf-8") as file:
             # First write the top level entry types to file which can be generated without processing the schemas
             for entry in TOP_ENTRY_HIERARCHY:
+                entries_count +=  1
                 file.writelines(top_entry_builder.create(config, entry))
                 file.writelines("\n")
 
@@ -127,19 +128,20 @@ def run():
 
             # Collect metadata for target db objects in each schema
             for schema in schemas:
+                entries_count +=  1
                 for object_type in DB_OBJECT_TYPES_TO_PROCESS:
                     objects_json = process_dataset(connector, config, schema, object_type)
                     print(f"Processed {len(objects_json)} {object_type.name}S in {schema}")
                     entries_count += len(objects_json)
                     write_jsonl(file, objects_json)
 
-    print(f"{entries_count} rows written to file {FILENAME}") 
+        print(f"{entries_count} rows written to file {FILENAME}") 
 
-    # If 'min_expected_entries set, file must meet minimum number of expected entries
-    if entries_count < config['min_expected_entries']:
-        print(f"Row count is less then min_expected_entries value of {config['min_expected_entries']}. Will not upload to Cloud Storage bucket.")
-    elif not config['local_output_only']:
-        print(f"Uploading to Cloud Storage bucket: {config['output_bucket']}/{FOLDERNAME}")
-        gcs_uploader.upload(config,output_path,FILENAME,FOLDERNAME)
+        # If 'min_expected_entries set, file must meet minimum number of expected entries
+        if entries_count < config['min_expected_entries']:
+            print(f"Row count is less then min_expected_entries value of {config['min_expected_entries']}. Will not upload to Cloud Storage bucket.")
+        elif not config['local_output_only']:
+            print(f"Uploading to Cloud Storage bucket: {config['output_bucket']}/{FOLDERNAME}")
+            gcs_uploader.upload(config,output_path,FILENAME,FOLDERNAME)
 
-    print("Finished")
+    print("Metadata extraction finished")

@@ -70,7 +70,6 @@ class DatabricksConnector:
 
         _cursor.execute(query)
         columns = [desc[0] for desc in _cursor.description]
-        print(columns)
         schema_fields = [StructField(col_name, StringType(), True) for col_name in columns]
 
         explicit_schema = StructType(schema_fields)

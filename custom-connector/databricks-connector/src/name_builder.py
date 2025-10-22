@@ -25,6 +25,7 @@ ALLOWED_SYMBOL = "!"
 def create_fqn(config: Dict[str, str], entry_type: EntryType,
                schema_name: str = "", table_name: str = ""):
     """Creates a fully qualified name or Dataplex v1 hierarchy name."""
+    SOURCE_TYPE = "databricks"
     if FORBIDDEN_SYMBOL in schema_name:
         schema_name = f"`{schema_name}`"
 
