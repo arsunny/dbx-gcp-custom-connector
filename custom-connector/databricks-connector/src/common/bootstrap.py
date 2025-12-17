@@ -121,7 +121,6 @@ def run():
 
             schemas = [schema.SCHEMA_NAME for schema in df_raw_schemas.select("SCHEMA_NAME").collect()]
             schemas_json = entry_builder.build_schemas(config, df_raw_schemas).toJSON().collect()
-            print(schemas_json)
             write_jsonl(file, schemas_json)
 
             print("Processing schemas..")

@@ -31,16 +31,19 @@ def create_fqn(config: Dict[str, str], entry_type: EntryType,
 
     if entry_type == EntryType.METASTORE:
         # Requires backticks to escape column
-        return f"{SOURCE_TYPE}:`{config['metastore']}`"
+        return f"{SOURCE_TYPE}:{config['metastore']}"
     if entry_type == EntryType.CATALOG:
         instance = create_fqn(config, EntryType.METASTORE)
         return f"{instance}.{config['catalog']}"
     if entry_type == EntryType.SCHEMA:
         database = create_fqn(config, EntryType.CATALOG)
         return f"{database}.{schema_name}"
-    if entry_type in [EntryType.TABLE, EntryType.VIEW]:
+    if entry_type == EntryType.TABLE:
         database = create_fqn(config, EntryType.CATALOG)
-        return f"{database}.{schema_name}.{table_name}"
+        return f"{database}.{schema_name}.{table_name}".replace("databricks:", "databricks:table:")
+    if entry_type == EntryType.VIEW:
+        database = create_fqn(config, EntryType.CATALOG)
+        return f"{database}.{schema_name}.{table_name}".replace("databricks:", "databricks:view:")
     if entry_type in [EntryType.FUNCTION, EntryType.MODEL, EntryType.VOLUME]:
         database = create_fqn(config, EntryType.CATALOG)
         return f"{database}.{schema_name}.{table_name}"

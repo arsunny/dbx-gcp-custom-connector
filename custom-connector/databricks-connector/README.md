@@ -14,13 +14,13 @@ Metadata for the following database objects is extracted by the connector:
 |---------|------------|
 |Catalog|Catalog name
 |Schema|Schema name
-|Tables|Table name, column names, column data types, column NULL/NOT NULL|
-|Views|View name, column names, column data types, column NULL/NOT NULL|
+|Tables|Table name, column names, column data types, column NULL/NOT NULL, column default values, column comment|
+|Views|View name, column names, column data types, column NULL/NOT NULL, column default values, column comment|
 
 Metadata is not extracted for objects in INFORMATION_SCHEMA.
 
 ### Parameters
-The connector takes the following parameters:
+The connector takes the following parameters
 
 |Parameter|Description|Default|Required/Optional|
 |---------|------------|---|-------------|
@@ -79,15 +79,14 @@ The following tools and libraries are required to run the connector:
 Note: If you are not running the connector in a Google Cloud managed environment then you need to first install the [Google Cloud CLI](https://cloud.google.com/sdk/docs/install-sdk)
 
 #### Set-up
-* Clone repository to local machine
+* Clone the connector repository
     ```bash
-    git clone https://github.com/arsunny/dbx-gcp-custom-connector.git
+    git clone https://github.com/GoogleCloudPlatform/cloud-dataplex.git
     ```
 * Ensure you are in the root directory of the connector
     ```bash
-    cd custom-connector/databricks-connector
+    cd cloud-dataplex/managed-connectivity/community-contributed-connectors/databricks-connector
     ```
-
 * Install python dependencies 
     ```bash
     pip3 install -r requirements.txt

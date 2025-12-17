@@ -22,10 +22,8 @@ from google.cloud import secretmanager
 # Loads file at a given path and returns the content as a string if path start as secret treat is as a Secret Manager reference
 def loadReferencedFile(file_path_or_secret_id) -> str:
     # If path starts with 'secret:' prefix, treat it as a Secret Manager reference
-    print(file_path_or_secret_id)
     if file_path_or_secret_id.startswith("secret:"):
         secret_id = file_path_or_secret_id.replace("secret:", "")
-        print(secret_id)
         try:
             client = secretmanager.SecretManagerServiceClient()
             name = f"{secret_id}/versions/latest"

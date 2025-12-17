@@ -78,12 +78,12 @@ class DatabricksConnector:
 
     def get_metastore_catalogs(self):
         query = "SELECT catalog_name FROM system.information_schema.catalogs where catalog_name not in ('system', " \
-                "'workspace')"
+                "'workspace', 'samples')"
         return self._execute(query)
 
     def get_db_schemas(self, catalog_name: str) -> DataFrame:
         query = f"SELECT schema_name FROM system.information_schema.schemata where catalog_name = '{catalog_name}' " \
-                f"and schema_name not in ('default', 'information_schema')"
+                f"and schema_name not in ('information_schema')"
         return self._execute(query)
 
     def get_dataset(self, schema_name: str, entry_type: EntryType):
